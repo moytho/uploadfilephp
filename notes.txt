@@ -1,0 +1,100 @@
+<?php
+define("UPLOAD_DIR", "/srv/www/uploads/");
+
+if (!empty($_FILES["myFile"])) {
+    $myFile = $_FILES["myFile"];
+
+    if ($myFile["error"] !== UPLOAD_ERR_OK) {
+        echo "<p>An error occurred.</p>";
+        exit;
+    }
+
+    // ensure a safe filename
+    $name = preg_replace("/[^A-Z0-9._-]/i", "_", $myFile["name"]);
+
+    // don't overwrite an existing file
+    $i = 0;
+    $parts = pathinfo($name);
+    while (file_exists(UPLOAD_DIR . $name)) {
+        $i++;
+        $name = $parts["filename"] . "-" . $i . "." . $parts["extension"];
+    }
+
+    // preserve file from temporary directory
+    $success = move_uploaded_file($myFile["tmp_name"],
+        UPLOAD_DIR . $name);
+    if (!$success) { 
+        echo "<p>Unable to save file.</p>";
+        exit;
+    }
+
+    // set proper permissions on the new file
+    chmod(UPLOAD_DIR . $name, 0644);
+}
+
+
+<?php
+//if they DID upload a file...
+if($_FILES['photo']['name'])
+{
+    //if no errors...
+    if(!$_FILES['photo']['error'])
+    {
+        //now is the time to modify the future file name and validate the file
+        $new_file_name = strtolower($_FILES['photo']['tmp_name']); //rename file
+        if($_FILES['photo']['size'] > (1024000)) //can't be larger than 1 MB
+        {
+            $valid_file = false;
+            $message = 'Oops!  Your file\'s size is to large.';
+        }
+        
+        //if the file has passed the test
+        if($valid_file)
+        {
+            //move it to where we want it to be
+            move_uploaded_file($_FILES['photo']['tmp_name'], 'uploads/'.$new_file_name);
+            $message = 'Congratulations!  Your file was accepted.';
+        }
+    }
+    //if there is an error...
+    else
+    {
+        //set that to be the returned message
+        $message = 'Ooops!  Your upload triggered the following error:  '.$_FILES['photo']['error'];
+    }
+}
+
+//you get the following information for each file:
+//$_FILES['field_name']['name']
+//$_FILES['field_name']['size']
+//$_FILES['field_name']['type']
+//$_FILES['field_name']['tmp_name']
+?>
+
+
+
+
+
+<?php
+
+if(isset($_POST["submit"]))
+{
+    $file = $_FILES['file']['tmp_name'];
+    $handle = fopen($file, "r");
+    $c = 0;
+    while(($filesop = fgetcsv($handle, 1000, ",")) !== false)
+    {
+        $name = $filesop[0];
+        $email = $filesop[1];
+        echo $name;
+        $sql = mysql_query("INSERT INTO zipcodes (zip, type) VALUES ('$name','$email')");
+    }
+    
+        if($sql){
+            echo "You database has imported successfully";
+        }else{
+            echo "Sorry! There is some problem.";
+        }
+}
+
+?>
